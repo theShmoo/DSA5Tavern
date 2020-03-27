@@ -28,7 +28,7 @@ import {NamePrefix,
   GuestQS,
   GuestFamous} from '../data/DSATavern';
 
-import {pickRandom, throwDice} from '../utils/RandomUtils';
+import {pickRandom, throwDice, createSeed} from '../utils/RandomUtils';
 
 const styles = {
   root: {
@@ -55,63 +55,64 @@ class TavernMain extends React.Component {
     this.setState({ open: false });
   };
 
-  getRandomName() {
-    const namePrefix = pickRandom(NamePrefix);
-    const moniker = pickRandom(Moniker[namePrefix.reference]);
+  getRandomName(seed) {
+    const namePrefix = pickRandom(NamePrefix, seed);
+    const moniker = pickRandom(Moniker[namePrefix.reference], seed);
     let prefix = namePrefix.name[moniker.male ? 0 : 1];
     if(prefix.length > 0)
       prefix += " "
     return prefix + moniker.name[namePrefix.plural ? 1 : 0];
   }
 
-  generateService() {
+  generateService(seed) {
     return {
-      chef: pickRandom(Chef).name,
-      staff: pickRandom(Staff).name,
+      chef: pickRandom(Chef, seed).name,
+      staff: pickRandom(Staff, seed).name,
     };
   }
 
-  generateGuests(general) {
-    const guestqs = pickRandom(GuestQS);
+  generateGuests(general, seed) {
+    const guestqs = pickRandom(GuestQS, seed);
     const qs = Math.max(Math.min(general.qs.qs+guestqs.qs, 6), 1);
-    let occasion = pickRandom(SpecialOccasion).name;
+    let occasion = pickRandom(SpecialOccasion, seed).name;
     if(occasion === "Geschlossene Gesellschaft")
-      occasion = pickRandom(ClosedCompany).name;
+      occasion = pickRandom(ClosedCompany, seed).name;
     return {
-      num: pickRandom(GuestsNum.guests).name,
+      num: pickRandom(GuestsNum.guests, seed).name,
       qs: GuestQSExamples[this.state.environment][qs-1],
-      special: pickRandom(GuestFamous).name,
+      special: pickRandom(GuestFamous, seed).name,
       occasion: occasion
     };
   }
 
-  generateSpecial() {
-    let special = pickRandom(TavernSpecial).name;
+  generateSpecial(seed) {
+    let special = pickRandom(TavernSpecial, seed).name;
     if(special === "Schrein")
-      special = pickRandom(Shrine).name + special;
+      special = pickRandom(Shrine, seed).name + special;
     return special;
   }
 
-  generateGeneral() {
-    const qs = pickRandom(TavernQS);
-    const price = pickRandom(TavernPrices);
+  generateGeneral(seed) {
+    const qs = pickRandom(TavernQS, seed);
+    const price = pickRandom(TavernPrices, seed);
     return {
-      type: pickRandom(TavernTypes.types),
+      type: pickRandom(TavernTypes.types, seed),
       qs: qs,
       price: Math.max(Math.min(qs.qs + price.qs, 6), 1),
-      seats: throwDice(pickRandom(TavernSeats).seats),
-      beds: throwDice(pickRandom(TavernBeds).beds),
-      special: this.generateSpecial(),
+      seats: throwDice(pickRandom(TavernSeats, seed).seats, seed),
+      beds: throwDice(pickRandom(TavernBeds, seed).beds, seed),
+      special: this.generateSpecial(seed),
     };
   }
 
   generateTavern = () => {
-    const general = this.generateGeneral();
+    let seed = createSeed();
+    const general = this.generateGeneral(seed);
     const tavern = {
-      name: this.getRandomName(),
+      name: this.getRandomName(seed),
       general: general,
-      guests: this.generateGuests(general),
-      service: this.generateService()
+      guests: this.generateGuests(general, seed),
+      service: this.generateService(seed)
     };
     this.setState((state) => {
       const history = [tavern, ...state.history];
@@ -123,6 +124,7 @@ class TavernMain extends React.Component {
     const { classes } = this.props;
     const { history } = this.state;
     const current = history.length > 0 ? history[0] : undefined;
+
     const MediaAction = (
       <DSAButton size="small" onClick={this.handleClickOpen}>
         Generiere eine neue Taverne
