@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
-import withWidth from '@material-ui/core/withWidth';
 
 import DSAInfoBox from '../controls/DSAInfoBox';
 import DSAItemList from '../controls/DSAItemList';
@@ -75,4 +74,4 @@ Tavern.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withWidth()(withStyles(styles)(Tavern));
+export default withStyles(styles)(Tavern);
